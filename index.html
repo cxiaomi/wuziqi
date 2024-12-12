@@ -11,7 +11,7 @@
             border: 1px solid black;
             border-collapse: collapse;
             background-color: burlywood;
-            margin:0 auto
+            margin:0 auto;
         }
         
         td {
@@ -36,12 +36,12 @@
                     obj.style.borderRadius = '50%';
                     var currentChess = {
                         x: obj.cellIndex,
-                        y: obj.parentNode.rowIndex,
+                        y: obj.parentNode.rowIndex - 1, // 修正行索引，因为rowIndex从1开始
                         color: currentColor
                     };
                     chessHistory.push(currentChess); // 记录棋盘状态
                     togglePlayer();
-                    checkWin(obj, currentChess);
+                    checkWin(currentChess);
                 }
             };
             document.getElementById('btnRegret').onclick = function () {
@@ -54,39 +54,47 @@
             document.getElementById('spanColor').innerText = currentColor;
         }
 
-        function checkWin(obj, currentChess) {
-            var flag = (currentColor == 'black' ? 'bbbbb' : 'wwww');
-            var tdArr = document.getElementById('chessboard').getElementsByTagName('td');
-            var result = ['', '', '', ''];
-            for (var i = 0; i < tdArr.length; i++) {
-                var tempChess = {
-                    x: tdArr[i].cellIndex,
-                    y: tdArr[i].parentNode.rowIndex,
-                    color: '0' // 位置上无棋子
-                };
-                if (tdArr[i].style.backgroundColor == 'black') {
-                    tempChess.color = 'b';
-                } else if (tdArr[i].style.backgroundColor == 'white') {
-                    tempChess.color = 'w';
-                }
-                if (currentChess.y == tempChess.y) {
-                    result[0] += tempChess.color;
-                }
-                if (currentChess.x == tempChess.x) {
-                    result[1] += tempChess.color;
-                }
-                if ((currentChess.x - tempChess.x) == (currentChess.y - tempChess.y)) {
-                    result[2] += tempChess.color;
-                }
-                if ((currentChess.x + currentChess.y) == (tempChess.x + tempChess.y)) {
-                    result[3] += tempChess.color;
-                }
-            }
-            for (var i = 0; i < result.length; i++) {
-                if(result[i].indexOf(flag) >= 0) {
-                    alert((currentColor == 'black' ? '黑棋' : '白棋') + '获胜！');
-                    chessHistory = []; // 清空棋盘状态
-                    break;
+        function checkWin(currentChess) {
+            var board = document.getElementById('chessboard');
+            var tdArr = board.getElementsByTagName('td');
+            var color = currentColor === 'black' ? 'black' : 'white';
+
+            // 检查四个方向：水平、垂直、两个对角线
+            var directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+            for (var i = 0; i < directions.length; i++) {
+                var dx = directions[i][0];
+                var dy = directions[i][1];
+                var count = 1; // 当前棋子
+                var x = currentChess.x + dx;
+                var y = currentChess.y + dy;
+                while (x >= 0 && x < 15 && y >= 0 && y < 15) {
+                    if (tdArr[y * 15 + x].style.backgroundColor === color) {
+                        count++;
+                        if (count === 5) {
+                            alert((currentColor === 'black' ? '黑棋' : '白棋') + '获胜！');
+                            return;
+                        }
+                        x += dx;
+                        y += dy;
+                    } else {
+                        break;
+                    }
+       
+				}
+                x = currentChess.x - dx;
+                y = currentChess.y - dy;
+                while (x >= 0 && x < 15 && y >= 0 && y < 15) {
+                    if (tdArr[y * 15 + x].style.backgroundColor === color) {
+                        count++;
+                        if (count === 5) {
+                            alert((currentColor === 'black' ? '黑棋' : '白棋') + '获胜！');
+                            return;
+                        }
+                        x -= dx;
+                        y -= dy;
+                    } else {
+                        break;
+                    }
                 }
             }
         }
@@ -97,7 +105,7 @@
                 return;
             }
             var lastMove = chessHistory.pop(); // 撤销最后一步棋
-            var obj = document.getElementById('chessboard').rows[lastMove.y].cells[lastMove.x];
+            var obj = document.getElementById('chessboard').rows[lastMove.y + 1].cells[lastMove.x];
             obj.style.backgroundColor = '';
             togglePlayer(); // 切换玩家
         }
